@@ -2,8 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-
+*{
+    margin:0;
+    padding:0;
+    box-sizing: border-box;
 }
 
+:root {
+   
+}
 
+body{
+    @apply font-texts
+}
+
+.wrapper{
+    @apply max-w-[1400px] m-auto
+}
+
+.mediumBtn{
+    @apply bg-black1 py-[0.5rem] px-[0.75rem] text-white rounded-3xl text-nowrap w-fit
+}
+
+.pwdField{
+    @apply relative 
+}
+
+.pwdField > input{
+    @apply w-full pr-8
+}
+
+.pwdField > button{
+    @apply absolute right-2 top-[50%] translate-y-[-50%] text-xl
+}
