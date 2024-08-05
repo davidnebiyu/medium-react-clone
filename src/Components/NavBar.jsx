@@ -13,6 +13,8 @@ function NavBar() {
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
     const dispatch = useDispatch()
 
+    const currentUser = useSelector((state)=>state.auth.currentUser)
+
     useEffect(()=>{
 
         const handleResize = () => {
@@ -46,12 +48,12 @@ function NavBar() {
                         <li>
                             <NavLink to=""  className={`capitalize`}  >Our Story</NavLink>
                         </li>
-                        <li>
-                            <NavLink to=""  className={`capitalize`}  >Write</NavLink>
-                        </li>
-                        <li>
+                        {currentUser && <li>
+                            <NavLink to="/write"  className={`capitalize`}  >Write</NavLink>
+                        </li>}
+                        {!currentUser && <li>
                             <button  className={`capitalize`}  onClick={()=>{dispatch(uiAction.setModalElement(Signin)) }}>Sign In</button>
-                        </li>
+                        </li>}
                     </ul>
                     <ul className='sm:hidden'>
                         <li><button onClick={()=>{setSideBar(!sidebar)}} className='border border-black1 p-2'>{sidebar ? <FaTimes/> : <FaBars/>}</button></li>

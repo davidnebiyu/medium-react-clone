@@ -1,15 +1,20 @@
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { createSlice, configureStore } from '@reduxjs/toolkit';
 
 const authSlice = createSlice({
     name:'Auth',
-    initialState:{currentUser:null}
+    initialState:{currentUser:null},
+    reducers:{
+        setCurrentUser(state, action){
+            state.currentUser = action.payload;
+        }
+    }
 })
 
 const uiSlice = createSlice({
     name:'UI',
-    initialState:{backdropStat:false, modalElement:null},
+    initialState:{backdropStat:false, modalElement:null, authLoading:true},
     reducers:{
         setModalElement(state, action){
             state.backdropStat = true
@@ -18,6 +23,9 @@ const uiSlice = createSlice({
         removeModalElement(state){
             state.backdropStat = false
             state.modalElement = null
+        },
+        setAuthLoading(state,action){
+            state.authLoading = action.payload
         }
     }
 })
@@ -34,8 +42,8 @@ const Store = configureStore({
         getDefaultMiddleware({
           serializableCheck: {
             // Ignore specific action types and paths
-            ignoredActions: ['UI/setModalElement'],
-            ignoredPaths: ['ui.modalElement'],
+            ignoredActions: ['UI/setModalElement', 'Auth/setCurrentUser'],
+            ignoredPaths: ['ui.modalElement', 'auth.currentUser'],
           },
         }),
 })
