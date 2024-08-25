@@ -13,7 +13,8 @@ import AuthListener from './Hooks/AuthListener'
 import WritePage from './Pages/WritePage'
 import RootPage from './Pages/RootPage'
 import PrivateRoute from './Components/PrivateRoute'
-
+import ProfilePage from './Pages/ProfilePage'
+import SettingsPage from './Pages/SettingsPage'
 
 function App() {
 
@@ -23,6 +24,12 @@ function App() {
       {element:<PrivateRoute from="out"/>, children:[
         {path:"/write", element:<WritePage/>},
       ]},
+      {path:'/:username', children:[
+        {index:true, element:<ProfilePage/>},
+        {element:<PrivateRoute from="out"/>, children:[
+          {path:"settings", element:<SettingsPage/>},
+        ]},
+      ]}
     ]}
   ])
 

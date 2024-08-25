@@ -6,30 +6,21 @@ import { useDispatch, useSelector } from "react-redux";
 import Backdrop from "./Backdrop";
 
 function ModalCont({Component}) {
-  const isBackdrop = useSelector((state) => state.ui.backdropStat);
-  const dispatch = useDispatch();
+  const modalElement = useSelector((state) => state.ui.modalElement);
+  const dispatch = useDispatch()
+  
   return (
     <>
     
       {createPortal(
-        <div className={`${
-          !isBackdrop ? "invisible opacity-0" : "visible opacity-100"
-        }  transition-all duration-500 fixed top-0 left-0 w-full h-full z-[200]`}>
-          <Backdrop/>
+        <div className={`transition-all duration-[3000ms] fixed top-0 left-0 w-full h-full z-[200] ${
+          modalElement ? "opacity-100" : "opacity-0"
+        }  `}>
+          <Backdrop onClick={()=>{dispatch(uiAction.removeModalElement())}}/>
           <div
-            className={` fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] !z-[300] bg-white shadow-xl p-8 w-full h-full  sm:w-[600px] sm:h-fit` }
+            className={`fixed !z-[300] bg-red-500` }
           >
-            
-              <button
-                onClick={() => {
-                  dispatch(uiAction.removeModalElement());
-                }}
-                className="absolute right-1 top-1 p-2 text-xl"
-              >
-                <FaTimes />
-              </button>
               <Component/>
-            {/* </div> */}
           </div>
         </div>,
         document.getElementById("overlay")

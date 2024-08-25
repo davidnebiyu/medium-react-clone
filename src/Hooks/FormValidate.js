@@ -34,9 +34,11 @@ function FormValidate() {
         return value.length <= length
      }
 
-     const isBnLength = (value, minLength, maxLength)=>{
-        if(isEmpty(value)){
-            return false
+     const isBnLength = (value, minLength, maxLength, optional=false)=>{
+        if(!optional){
+            if(isEmpty(value)){
+                return false
+            }
         }
         return value.length >= minLength && value.length <= maxLength
      }

@@ -4,10 +4,13 @@ import { createSlice, configureStore } from '@reduxjs/toolkit';
 
 const authSlice = createSlice({
     name:'Auth',
-    initialState:{currentUser:null},
+    initialState:{currentUser:null, currentUserData:null},
     reducers:{
         setCurrentUser(state, action){
             state.currentUser = action.payload;
+        },
+        setCurrentUserData(state, action){
+            state.currentUserData = action.payload;
         }
     }
 })
@@ -17,11 +20,9 @@ const uiSlice = createSlice({
     initialState:{backdropStat:false, modalElement:null, authLoading:true},
     reducers:{
         setModalElement(state, action){
-            state.backdropStat = true
             state.modalElement = action.payload
         },
         removeModalElement(state){
-            state.backdropStat = false
             state.modalElement = null
         },
         setAuthLoading(state,action){

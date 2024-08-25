@@ -1,8 +1,8 @@
 import React from 'react'
 import blogvector from '../assets/blog-vector.png'
 import { useDispatch, useSelector } from 'react-redux'
-import { signout } from '../Firebasem/AuthF' 
 import { uiAction } from '../Store/Store'
+import Explore from '../Components/Explore'
 import Signin from '../Components/Signin'
 
 function HomePage() {
@@ -23,7 +23,7 @@ function HomePage() {
         </div>
       </header>
       :
-      <button onClick={()=>{signout()}}>Sign Out</button>
+      <Explore/>
       }
 
     </>
