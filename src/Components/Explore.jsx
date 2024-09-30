@@ -1,9 +1,66 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Posts from './Posts'
 import { Link } from 'react-router-dom'
-import { posts } from './DataForUI'
-
+import Loading from '../UI/Loading'
+import { collection, getDocs, orderBy, query, where } from 'firebase/firestore'
+import { db } from '../Firebasem/Store'
+import { toast } from 'react-toastify'
+import { readData } from '../Firebasem/FirestoreF'
 function Explore() {
+
+
+    const [Blogs, setBlogs] = useState({loading:true, data:[], error:null})
+
+    const getBlogs = async()=>{
+        setBlogs((prevData)=>({
+            ...prevData, 
+            error:null,
+            loading:true,
+        }))   
+        try {          
+            const ref = collection(db, "posts")
+            const queryRef = query(ref, where("status", "==", "PUBLISHED"), orderBy("timeStamp", "desc"))
+            const querySnapShot = await getDocs(queryRef)
+    
+            if(querySnapShot.empty){
+                throw new Error("NO_DATA_FOUND")
+            }
+
+            const arr = [];
+
+            querySnapShot.forEach(async (snap)=>{
+
+                return arr.push(
+                    {blogId:snap.id, blogData:snap.data()}
+                )
+                
+            })
+
+                setBlogs((prevData)=>({
+                    ...prevData, 
+                    data:arr
+                }))   
+                
+        } catch (error) {
+            console.log(error);   
+            setBlogs((prevData)=>({
+                ...prevData, 
+                error:error
+            }))    
+            error.message != "NO_DATA_FOUND" && toast.error("There was some error!")   
+        }finally{
+            setBlogs((prevData)=>({
+                ...prevData, 
+                loading:false
+            }))   
+        }
+
+        
+    }
+
+    useEffect(()=>{
+        getBlogs()
+    }, [])
 
   return (
     <>
@@ -11,10 +68,18 @@ function Explore() {
             
             <div className='flex-3 py-8 w-full sm:w-[70%] sm:border-r sm:pr-3 md:pr-20'>
                 {
-                    posts.map((post,index)=>(
-                        <>
-                            <Posts post={post} key={post.title}/>
-                        </>
+                   Blogs.loading && <div className='w-full relative top-[5rem] flex justify-center items-center'> <div className='loader'></div> </div> 
+                }
+
+                {
+                    !Blogs.loading && Blogs.error && Blogs.error == "NO_DATA_FOUND" && <p className='font-bold'>NO BLOGS YET!</p>
+                }
+
+                {
+                    !Blogs.loading && !Blogs.error && Blogs.data.length > 0 && 
+
+                    Blogs.data.map((blog)=>(
+                        <Posts postID={blog.blogId} post={blog.blogData}/>
                     ))
                 }
 

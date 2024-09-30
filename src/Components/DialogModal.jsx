@@ -39,7 +39,6 @@ function DialogModal({
   if (!isOpen) {
     return null;
   }
-  console.log(disabled);
   
   return (
     <>

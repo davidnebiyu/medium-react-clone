@@ -15,6 +15,9 @@ import RootPage from './Pages/RootPage'
 import PrivateRoute from './Components/PrivateRoute'
 import ProfilePage from './Pages/ProfilePage'
 import SettingsPage from './Pages/SettingsPage'
+import LibraryPage from './Pages/LibraryPage'
+import StoryPage from './Pages/StoryPage'
+import PostPage from './Pages/PostPage'
 
 function App() {
 
@@ -28,7 +31,10 @@ function App() {
         {index:true, element:<ProfilePage/>},
         {element:<PrivateRoute from="out"/>, children:[
           {path:"settings", element:<SettingsPage/>},
+          {path:"library", element:<LibraryPage/>},   
+          {path:"stories", element:<StoryPage/>},  
         ]},
+        {path:":POST_ID", element:<PostPage/>},          
       ]}
     ]}
   ])

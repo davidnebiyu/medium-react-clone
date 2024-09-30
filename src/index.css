@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+
+
 *{
     margin:0;
     padding:0;
@@ -142,3 +144,72 @@ body{
     text-decoration: underline;
   }
     
+  .blogWrapper{
+    @apply max-w-[740px] mx-auto 
+  }
+
+  .blogContent{
+    @apply leading-6 text-justify 
+  }
+
+  .blogContent pre{
+    @apply bg-slate-100 p-2 overflow-auto leading-6 !text-[0.85rem]
+  }
+
+  .blogContent .ql-size-large{
+    @apply text-2xl
+  }
+
+  .blogContent .ql-size-huge{
+    @apply text-4xl
+  }
+
+  .blogContent a{
+    @apply text-wrap underline
+  }
+  .blogContent img, .blogContent video{
+    @apply w-full h-auto
+  }
+
+  .blogContent iframe{
+    @apply w-full h-auto sm:min-h-[300px]
+  }
+
+  .blogContent ol,   .blogContent ul{
+    @apply ml-4
+  }
+  
+  .blogContent ol > li{
+    @apply list-decimal ml-4
+  }
+
+  .blogContent ul > li{
+    @apply list-disc ml-4
+  }
+
+  .blogContent blockquote{
+    @apply relative pl-8 italic
+    
+  }
+
+  .blogContent blockquote::before{
+    position: absolute;
+    left: 0;
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    content: '\f10d';
+    font-size: 1.5rem;
+    font-style: italic;
+  }
+
+  /* Make the toolbar fixed */
+.ql-toolbar {
+  position: sticky;
+  top: 150px;
+  left: 0;
+  right: 0;
+  z-index: 10; /* Ensure it appears above other content */
+  background-color: #fff; /* Optional: Set background to match the editor */
+  border-bottom: 1px solid #ddd; /* Optional: Add a border for separation */
+  padding: 5px 10px;
+}

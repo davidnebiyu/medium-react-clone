@@ -41,7 +41,7 @@ const UserSidebar = forwardRef(({openCont}, ref)=>{
                 </ul>
                 <ul className='sidebarCont text-[0.85rem] [&:not(:last-child)]:border-b border-slate-200  py-3'>
                     <li>
-                        <div onClick={(e)=>{setSignOutDiagDisp(true); }} className="flex flex-col justify-center gap-1 px-6 py-2 opacity-80 hover:opacity-100 cursor-pointer"> <span>Sign out</span> <span>us*****@gmail.com</span></div>
+                        <div onClick={(e)=>{setSignOutDiagDisp(true); }} className="flex flex-col justify-center gap-1 px-6 py-2 opacity-80 hover:opacity-100 cursor-pointer"> <span>Sign out</span></div>
                     </li>
                     <DialogModal isOpen={signOutDiagDisp} title="Are you sure to logout?" type={"confirm"} onConfirm={()=>{signOut()}} onClose={()=>{setSignOutDiagDisp(false);  openCont(false)}}/>
                 </ul>

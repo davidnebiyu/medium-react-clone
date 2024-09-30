@@ -11,8 +11,9 @@ import { useSelector } from "react-redux";
 import FollowBtn from "../Components/FollowBtn";
 import { readData, updateData } from "../Firebasem/FirestoreF";
 import { toast } from "react-toastify";
-import { checkUser } from "../Hooks/AuthValidation";
+import { checkFollowStat, checkUser } from "../Hooks/AuthValidation";
 import profilepic from "../assets/profilepic.png";
+import { data } from "autoprefixer";
 
 function ProfilePage() {
   const navigate = useNavigate();
@@ -20,6 +21,11 @@ function ProfilePage() {
   const username = param.username;
 
   const currentUser = useSelector((state) => state.auth.currentUser);
+ 
+  const currentUserData = useSelector((state) =>
+    state.auth.currentUserData
+  );
+  
   const currentUsername = useSelector((state) =>
     state.auth.currentUserData ? state.auth.currentUserData.username : null
   );
@@ -37,23 +43,68 @@ function ProfilePage() {
     userData,
   } = checkUser({ username: username, dependency: [param, currentUser] });
 
+  const [prevParamUser, setPrevParamUser] = useState(null);
+
+  const [Blogs, SetBlogs] = useState({ loading: true, data: [], error: null });
   const [About, setAbout] = useState({ data: "", loading: true, error: null });
-  const [Followers, setFollowers] = useState({
-    data: [],
-    loading: true,
-    error: null,
-  });
-  const [Following, setFollowing] = useState({
-    data: [],
-    loading: true,
-    error: null,
-  });
+
+  const {followers, following, loading:followLoading, error:followError, followerSize, followingSize, setFollowers:settingFollowers, setFollowing:settingFollowing, setFwSize:setFollowingSize, setFrSize:setFollowerSize, checkStat:getStat} = checkFollowStat()
+
+  const checkPosts = async () => {
+    
+    if ( !userData || (username != userData.username && paramUserId == prevParamUser)) {
+      return;
+    }
+
+    try {
+      const docRef = await readData({
+        collectionName: "users",
+        Id: paramUserId,
+      });
+      if (docRef.exists()) {
+        const POSTSRef = collection(db, "posts");
+        const POSTQuery = query(POSTSRef, where("blogger", "==", paramUserId));
+        const POSTSnap = await getDocs(POSTQuery);
+
+        if (!POSTSnap.empty) {
+          let postsArr = [];
+
+          POSTSnap.forEach((post) => {
+            return postsArr.push({ id: post.id, info: post.data() });   
+          });
+
+          SetBlogs((prevData) => ({
+            ...prevData,
+            data: postsArr,
+          }));
+        } else {
+          throw new Error("NO_DATA_FOUND");
+        }
+      } else {
+        throw new Error("USER_NOT_FOUND");
+      }
+    } catch (error) {
+      console.log(error);
+      SetBlogs((prevData) => ({
+        ...prevData,
+        error: error.message,
+      }));
+
+      error.message != "NO_DATA_FOUND" && toast.error("There was some errror!");
+    } finally {
+      SetBlogs((prevData) => ({
+        ...prevData,
+        loading: false,
+      }));
+      setPrevParamUser(paramUserId);
+    }
+  };
 
   const checkAbout = async () => {
-    setAbout((prevData) => ({
-      ...prevData,
-      loading: true,
-    }));
+    if ( !userData || (username != userData.username && paramUserId == prevParamUser)) {
+      return;
+      // this is for accepting the latest userData from the URL username, i.e let the checkUser async run first whwn routing
+    }
 
     try {
       const docRef = await readData({
@@ -62,8 +113,6 @@ function ProfilePage() {
       });
       if (docRef.exists()) {
         if (docRef.data().about && docRef.data().about.length > 0) {
-          console.log( formatText(docRef.data().about));
-          
           setAbout((prevData) => ({
             ...prevData,
             data: docRef.data().about,
@@ -87,145 +136,129 @@ function ProfilePage() {
         ...prevData,
         loading: false,
       }));
+      setPrevParamUser(paramUserId);
     }
   };
 
   const checkFollowers = async () => {
-    setFollowers((prevData) => ({
-      ...prevData,
-      loading: true,
-    }));
+    if ( !userData || (username != userData.username && paramUserId == prevParamUser)) {
+      return;
+    }
 
     try {
-      const docRef = await readData({
-        collectionName: "users",
-        Id: paramUserId,
-      });
-      if (docRef.exists()) {
-        if (docRef.data().followers && docRef.data().followers.length > 0) {
-          setFollowers((prevData) => ({
-            ...prevData,
-            data: docRef.data().followers,
-          }));
-        } else {
-          throw new Error("NO_FOLLOWERS_FOUND");
-        }
-      } else {
-        throw new Error("USER_NOT_FOUND");
-      }
+      getStat({user1ID:paramUserId, getFollowers:true })
     } catch (error) {
-      console.log(error);
-      setFollowers((prevData) => ({
-        ...prevData,
-        error: error.message,
-      }));
-
-      error.message != "NO_FOLLOWERS_FOUND" &&
-        toast.error("There was some errror!");
     } finally {
-      setFollowers((prevData) => ({
-        ...prevData,
-        loading: false,
-      }));
+      setPrevParamUser(paramUserId);
     }
   };
 
   const checkFollowing = async () => {
-    setFollowing((prevData) => ({
-      ...prevData,
-      loading: true,
-    }));
+    if ( !userData || (username != userData.username && paramUserId == prevParamUser)) {
+      return;
+    }
 
     try {
-      const docRef = await readData({
-        collectionName: "users",
-        Id: paramUserId,
-      });
-      if (docRef.exists()) {
-        if (docRef.data().following && docRef.data().following.length > 0) {
-          setFollowing((prevData) => ({
-            ...prevData,
-            data: docRef.data().following,
-          }));
-        } else {
-          throw new Error("NO_FOLLOWING_FOUND");
-        }
-      } else {
-        throw new Error("USER_NOT_FOUND");
-      }
+      getStat({user1ID:paramUserId, getFollowings:true })
     } catch (error) {
-      console.log(error);
-      setFollowing((prevData) => ({
-        ...prevData,
-        error: error.message,
-      }));
-
-      error.message != "NO_FOLLOWING_FOUND" &&
-        toast.error("There was some errror!");
     } finally {
-      setFollowing((prevData) => ({
-        ...prevData,
-        loading: false,
-      }));
+      setPrevParamUser(paramUserId);
     }
   };
 
   useEffect(() => {
-    if (section == "followers") {
+    if (section == "home") {
+      SetBlogs((prevData) => ({
+        loading: true,
+        data: [],
+        error: null,
+      }));
+      checkPosts()
+    } else if (section == "followers") {
+      // setFollowers((prevData) => ({
+      //   data: [],
+      //   loading: true,
+      //   size: null,
+      //   error: null,
+      // }));
       checkFollowers();
     } else if (section == "following") {
+      // setFollowing((prevData) => ({
+      //   data: [],
+      //   loading: true,
+      //   size: null,
+      //   error: null,
+      // }));
       checkFollowing();
     } else if (section == "about") {
+      setAbout((prevData) => ({
+        data: "",
+        loading: true,
+        error: null,
+      }));
       checkAbout();
     }
-  }, [section, param, currentUser]);
-
-  const [editAbout, setEditAbout] = useState(false);
-  const editAboutDiv = useRef(null)
+  }, [section, param, currentUser, paramUserId, userData]);
 
   useEffect(()=>{
-    if(editAbout){
+    if ( !userData || (username != userData.username && paramUserId == prevParamUser)) {
+      return;
+    }
+    getStat({user1ID:paramUserId})
+  }, [param, paramUserId])
+
+  const [editAbout, setEditAbout] = useState(false);
+  const editAboutDiv = useRef(null);
+
+  useEffect(() => {
+    if (editAbout) {
       editAboutDiv.current.focus();
     }
-  }, [editAbout])
+  }, [editAbout]);
 
-  const [submitting, setSubmitting] = useState(false)
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleEditAbout = async()=>{
-    
-    setSubmitting(true)
-    
+  const handleEditAbout = async () => {
+    setSubmitting(true);
+
     try {
       await updateData({
         collectionName: "users",
         Id: currentUser,
-        data: { about: editAboutDiv.current.innerText.trim().length > 0 ? editAboutDiv.current.innerHTML : "" },
+        data: {
+          about:
+            editAboutDiv.current.innerText.trim().length > 0
+              ? editAboutDiv.current.innerHTML
+              : "",
+        },
       });
-      setEditAbout(false)
-      if(!editAboutDiv.current.innerText.trim().length > 0){
+      setEditAbout(false);
+      if (!editAboutDiv.current.innerText.trim().length > 0) {
         setAbout((prevData) => ({
           ...prevData,
           data: "",
-          error:"NO_DATA_FOUND"
+          error: "NO_DATA_FOUND",
         }));
-      }else{
+      } else {
         setAbout((prevData) => ({
           ...prevData,
           data: editAboutDiv.current.innerHTML,
-          error:null
+          error: null,
         }));
       }
     } catch (error) {
       console.log(error);
-      
-    }finally{
-      setSubmitting(false)
+    } finally {
+      setSubmitting(false);
     }
-  }
+  };
 
   const formatText = (text) => {
     return (
-      <div className="aboutContent" dangerouslySetInnerHTML={{ __html: text }} />
+      <div
+        className="aboutContent"
+        dangerouslySetInnerHTML={{ __html: text }}
+      />
     );
   };
 
@@ -238,7 +271,7 @@ function ProfilePage() {
           <div className="wrapper px-5 flex flex-col-reverse sm:flex-row relative text-slate-700">
             <div className="flex-3 py-4 sm:py-8 w-full sm:w-[70%] sm:border-r sm:pr-3 md:pr-20">
               <p className="hidden sm:block font-bold text-4xl mt-6 mb-10">
-                David
+                {userData && userData.name}
               </p>
               <div className="flex gap-6 border-b pb-4 mb-8 items-center relative overflow-x-auto no-scrollbar">
                 <button
@@ -275,7 +308,7 @@ function ProfilePage() {
                     setSection("followers");
                   }}
                 >
-                  Followers
+                  Followers {followerSize && `(${followerSize})`}
                 </button>
                 <button
                   className={`relative ${
@@ -287,16 +320,37 @@ function ProfilePage() {
                     setSection("following");
                   }}
                 >
-                  Following
+                  Following {followingSize && `(${followingSize})`}
                 </button>
               </div>
               {section == "home" && (
                 <>
-                  {posts.map((post, index) => (
+            
+                  {Blogs.loading && (
+                    <div className="flex justify-center">
+                      {" "}
+                      <div className="loader small"></div>{" "}
+                    </div>
+                  )}
+                   {!Blogs.loading &&
+                    Blogs.error == "NO_DATA_FOUND" && (
+                      <div className="">
+                        {" "}
+                        No Blog Posts yet.{" "}
+                        {isCurrentUser
+                          ? <> Explore Your intersets and share the content! <span className="underline"> <Link to="/write">Start Here</Link></span> </>
+                          : ""}
+                      </div>
+                    )}
+                  {!Blogs.loading && !Blogs.error && (
                     <>
-                      <Posts post={post} source="profile" keyy={index} />
+                      {Blogs.data.map((post, index) => (
+                        <>
+                          <Posts post={post.info} postID={post.id} source="profile" key={post.id} />
+                        </>
+                      ))}
                     </>
-                  ))}
+                  )}
                 </>
               )}
               {section == "about" && (
@@ -343,9 +397,7 @@ function ProfilePage() {
                               contentEditable={editAbout}
                               role="textbox"
                               aria-multiline="true"
-                            >
-                              
-                            </div>
+                            ></div>
 
                             <div
                               className={`${
@@ -359,7 +411,8 @@ function ProfilePage() {
                               } flex justify-end gap-4 text-[0.85rem]`}
                             >
                               {editAbout && (
-                                <button disabled={submitting} 
+                                <button
+                                  disabled={submitting}
                                   onClick={() => {
                                     setEditAbout(false);
                                     setAbout((prevData) => ({
@@ -373,7 +426,11 @@ function ProfilePage() {
                                 </button>
                               )}
                               {editAbout && (
-                                <button  disabled={submitting} className="mediumBtn !px-6" onClick={handleEditAbout}>
+                                <button
+                                  disabled={submitting}
+                                  className="mediumBtn !px-6"
+                                  onClick={handleEditAbout}
+                                >
                                   {submitting ? "Updating..." : "Save"}
                                 </button>
                               )}
@@ -441,7 +498,7 @@ function ProfilePage() {
                               disabled={submitting}
                               onClick={() => {
                                 setEditAbout(false);
-                                editAboutDiv.current.innerHTML = About.data
+                                editAboutDiv.current.innerHTML = About.data;
                               }}
                               className="mediumBtn !text-black1 !bg-transparent !border !border-black1 !px-6"
                             >
@@ -449,7 +506,12 @@ function ProfilePage() {
                             </button>
                           )}
                           {editAbout && (
-                            <button onClick={handleEditAbout} className="mediumBtn !px-6">{submitting ? "Updating..." : "Save"}</button>
+                            <button
+                              onClick={handleEditAbout}
+                              className="mediumBtn !px-6"
+                            >
+                              {submitting ? "Updating..." : "Save"}
+                            </button>
                           )}
                         </div>
                       </div>
@@ -458,14 +520,14 @@ function ProfilePage() {
               )}
               {section == "following" && (
                 <>
-                  {Following.loading && (
+                  {followLoading && (
                     <div className="flex justify-center">
                       {" "}
                       <div className="loader small"></div>{" "}
                     </div>
                   )}
-                  {!Following.loading &&
-                    Following.error == "NO_FOLLOWING_FOUND" && (
+                  {!followLoading &&
+                    followError == "NO_FOLLOWING_FOUND" && (
                       <div className="">
                         {" "}
                         No followings yet.{" "}
@@ -474,33 +536,37 @@ function ProfilePage() {
                           : ""}
                       </div>
                     )}
-                  {!Following.loading &&
-                    !Following.error &&
-                    posts.map((post, index) => (
+                  {!followLoading &&
+                    !followError &&
+                    following.map((followedUser, index) => (
                       <>
                         <div
-                          className="flex gap-4 justify-between py-2"
-                          key={index}
+                          className="flex gap-4 justify-between py-2 items-center"
+                          key={followedUser.id}
                         >
                           <div className="flex gap-6">
-                            <Link to={`/@username`} className="w-[60px]">
+                            <Link to={`/@username`} className="w-[40px]">
                               <img
-                                src={blogvector}
-                                className="rounded-[50%] object-cover object-center"
+                                src={`${
+                                  followedUser.info.userImage
+                                    ? followedUser.info.userImage
+                                    : profilepic
+                                }`}
+                                className="rounded-[50%] w-full object-cover object-center"
                                 alt=""
                               />
                             </Link>
                             <div className="flex flex-col">
                               <Link
-                                to={`/@username`}
+                                to={`/${followedUser.info.username}`}
                                 className="hover:underline w-fit font-bold text-slate-900"
                               >
-                                Dawit Nebiyu
+                                {followedUser.info.name}
                               </Link>
-                              <p>Sharing my insight of life</p>
+                              <p>{followedUser.info.bio}</p>
                             </div>
                           </div>
-                          <FollowBtn className="!h-fit" userID="1" />
+                          {(currentUser != followedUser.id) && <FollowBtn className="!h-fit" user1={currentUser} onSetFollowing={settingFollowing} onSetFollowingSize={setFollowingSize} user2={followedUser.id}/>}
                         </div>
                       </>
                     ))}
@@ -508,14 +574,14 @@ function ProfilePage() {
               )}
               {section == "followers" && (
                 <>
-                  {Followers.loading && (
+                  {followLoading && (
                     <div className="flex justify-center">
                       {" "}
                       <div className="loader small"></div>{" "}
                     </div>
                   )}
-                  {!Followers.loading &&
-                    Followers.error == "NO_FOLLOWERS_FOUND" && (
+                  {!followLoading &&
+                    followError == "NO_FOLLOWERS_FOUND" && (
                       <div className="">
                         {" "}
                         No Followers yet!{" "}
@@ -524,33 +590,37 @@ function ProfilePage() {
                           : "Be the first to follow this account!"}
                       </div>
                     )}
-                  {!Followers.loading &&
-                    !Followers.error &&
-                    posts.map((post, index) => (
+                  {!followLoading &&
+                    !followError &&
+                    followers.map((follower, index) => (
                       <>
                         <div
-                          className="flex gap-4 justify-between py-2"
+                          className="flex gap-4 justify-between py-2 items-center"
                           key={index}
                         >
                           <div className="flex gap-6">
-                            <Link to={`/@username`} className="w-[60px]">
+                            <Link to={`/@username`} className="w-[40px]">
                               <img
-                                src={blogvector}
-                                className="rounded-[50%] object-cover object-center"
+                                src={`${
+                                  follower.info.userImage
+                                    ? follower.info.userImage
+                                    : profilepic
+                                }`}
+                                className="rounded-[50%] w-full object-cover object-center"
                                 alt=""
                               />
                             </Link>
                             <div className="flex flex-col">
                               <Link
-                                to={`/@username`}
+                                to={`/${follower.info.username}`}
                                 className="hover:underline w-fit font-bold text-slate-900"
                               >
-                                Dawit Nebiyu
+                                {follower.info.name}
                               </Link>
-                              <p>Sharing my insight of life</p>
+                              <p>{follower.info.bio}</p>
                             </div>
                           </div>
-                          <FollowBtn className="!h-fit" userID="1" />
+                          {(currentUser != follower.id) && <FollowBtn className="!h-fit" user1={currentUser} onSetFollowers={settingFollowers} onSetFollowingSize={setFollowingSize} user2={follower.id} />}
                         </div>
                       </>
                     ))}
@@ -573,77 +643,19 @@ function ProfilePage() {
                 </div>
                 <div className="flex flex-col gap-2">
                   <p className="text-slate-900 font-bold text-2xl sm:text-base">
-                    David
-                  </p>
-                  <p className="flex gap-4">
-                    <p
-                      onClick={() => {
-                        setSection("followers");
-                      }}
-                      className="hover:underline cursor-pointer"
-                    >
-                      700 Followers
-                    </p>
-                    <p
-                      onClick={() => {
-                        setSection("following");
-                      }}
-                      className=" sm:hidden hover:underline cursor-pointer"
-                    >
-                      20 Following
-                    </p>
+                    {userData && userData.name}
                   </p>
                 </div>
                 <p className="hidden sm:flex">
-                  Sharing my explorations and insights from life.{" "}
+                  {userData && userData.bio}
                 </p>
               </div>
 
               {!isCurrentUser && (
-                <FollowBtn className="!h-fit !w-full sm:!w-fit" userID="1" />
+                <FollowBtn className="!h-fit !w-full sm:!w-fit" user1={currentUser} onSetFollowers={settingFollowers} onSetFollowing={settingFollowing} onSetFollowingSize={setFollowingSize} user2={paramUserId} />
               )}
 
-              {(section == "home" || section == "about") && (
-                <div className="hidden sm:block">
-                  <p className="text-slate-900 font-bold">Following</p>
-
-                  <ul className="flex flex-col gap-2 my-4">
-                    {posts.map((post, index) => (
-                      <>
-                        <li className="relative group w-fit" key={index}>
-                          <Link
-                            to={`/@username`}
-                            className="w-fit flex gap-4 items-center hover:underline"
-                            onMouseEnter={(e) => {
-                              setMousePos(e);
-                            }}
-                          >
-                            <div className="w-[30px]">
-                              <img
-                                src={blogvector}
-                                className=" w-full rounded-[50%] object-cover object-center"
-                                alt=""
-                              />{" "}
-                            </div>
-                            <span>Dawit Nebiyu</span>
-                          </Link>
-                          <div className="hidden group-hover:block">
-                            <UserDiscModal source="right" mousePos={mousePos} />
-                          </div>
-                        </li>
-                      </>
-                    ))}
-                  </ul>
-                  <p
-                    onClick={() => {
-                      setSection("following");
-                    }}
-                    className=" cursor-pointer hover:underline"
-                  >
-                    See all (25)
-                  </p>
-                </div>
-              )}
+            
             </div>
           </div>
         </>
