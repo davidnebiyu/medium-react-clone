@@ -267,7 +267,7 @@ function StoryPage() {
               {published.loading && <div className="loader small"></div>}
 
               {!published.loading && published.count == 0 && (
-                <p className="font-bold">No Drafts Saved </p>
+                <p className="font-bold">No Published Posts </p>
               )}
 
               {!published.loading &&

@@ -12,6 +12,8 @@ import DialogModal from "./DialogModal";
 import { useDispatch, useSelector } from "react-redux";
 import { uiAction } from "../Store/Store";
 import Signin from "./Signin";
+import { savePost } from "../Hooks/PostActions";
+import { BsSaveFill } from "react-icons/bs";
 
 function Post({
   status,
@@ -24,9 +26,9 @@ function Post({
   isLoggedIn,
   blogID,
   onSetFollow,
-  followLoading
+  followLoading,
 }) {
-  const { title, content: note, likes: claps, comments } = postData;    
+  const { title, content: note, likes: claps, comments } = postData;
 
   const [content, setContent] = useState(null);
 
@@ -78,17 +80,22 @@ function Post({
 
   const currentUser = useSelector((state) => state.auth.currentUser);
 
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   const toggleFollow = () => {
-
-    if(!currentUser){
+    if (!currentUser) {
       dispatch(uiAction.setModalElement(Signin));
-      return
+      return;
     }
-    
+
     onSetFollow({ user1ID: currentUser, user2ID: bloggerID, toggle: true });
   };
+
+  const { stat, error, hasSaved, savedBlogs, saveBlog } = savePost();
+
+  useEffect(() => {
+    saveBlog({ postID: blogID, userID: currentUser });
+  }, [currentUser]);
 
   return (
     <>
@@ -152,10 +159,41 @@ function Post({
                 </button>
               </div>
               <div className="flex gap-8 ">
-                {!isCurrentUser && (
-                  <button title="save" onClick={() => {}}>
-                    <CiSaveDown2 className="text-2xl text-slate-700 hover:text-inherit" />
-                  </button>
+                {bloggerID != null && !isCurrentUser && hasSaved != null && (
+                  <div className="">
+                    {hasSaved && (
+                      <button
+                        title="unsave"
+                        disabled={stat}
+                        onClick={(e) => {
+                          saveBlog({
+                            postID: blogID,
+                            userID: currentUser,
+                            toggle: true,
+                          });
+                          e.preventDefault();
+                        }}
+                      >
+                        <BsSaveFill className="text-2xl hover:text-slate-950" />
+                      </button>
+                    )}
+                    {!hasSaved && (
+                      <button
+                        title="save"
+                        disabled={stat}
+                        onClick={(e) => {
+                          saveBlog({
+                            postID: blogID,
+                            userID: currentUser,
+                            toggle: true,
+                          });
+                          e.preventDefault();
+                        }}
+                      >
+                        <CiSaveDown2 className="text-2xl hover:text-slate-950" />
+                      </button>
+                    )}
+                  </div>
                 )}
                 <button title="copy link" onClick={handleCopyLink}>
                   <FaLink className="text-xl text-slate-700 hover:text-inherit" />
