@@ -8,11 +8,13 @@ import { AiOutlinePushpin } from "react-icons/ai";
 import { readData } from "../Firebasem/FirestoreF";
 import profilepic from "../assets/profilepic.png";
 import { useSelector } from "react-redux";
-import { savePost } from "../Hooks/PostActions";
+import { likePost, savePost } from "../Hooks/PostActions";
 import { BsSaveFill } from "react-icons/bs";
+import { PiHandsClappingBold } from "react-icons/pi";
+
 
 function Posts({ post, postID, source }) {
-  const { title, desc, date, comments, likes: claps, userID } = post;
+  const { title, desc, date, comments, userID } = post;
   const [isUserDiscVisible, setIsUserDiscVisible] = useState(false);
   const [mousePos, setMousePos] = useState(null);
 
@@ -41,8 +43,25 @@ function Posts({ post, postID, source }) {
 
   const { stat, error, hasSaved, savedBlogs, saveBlog } = savePost();
 
+  const {
+    stat: likeLoading,
+    error: likeError,
+    hasLiked,
+    userLikeCount,
+    totalPostLikes: claps,
+    likeBlog,
+    undoClaps,
+  } = likePost();
+
   useEffect(() => {
     saveBlog({ postID: postID, userID: currentUser });
+  }, [currentUser]);
+
+  useEffect(() => {
+    setInterval(()=>{
+      likeBlog({ postID: postID, userID: currentUser });
+
+    }, 5000)
   }, [currentUser]);
 
   return (
@@ -101,8 +120,9 @@ function Posts({ post, postID, source }) {
               <div className="flex gap-6">
                 <p className="flex items-center gap-1"> {date}</p>
                 <p className="flex items-center gap-1">
-                  {" "}
-                  <PiHandsClappingThin className="text-xl text-slate-950" />{" "}
+                  
+                  {!hasLiked && <PiHandsClappingThin className="text-xl text-slate-950" />}
+                  {hasLiked && <PiHandsClappingBold className="text-xl text-slate-950" />}
                   {claps}
                 </p>
                 <p className="flex items-center gap-1">

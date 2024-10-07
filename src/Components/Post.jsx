@@ -12,8 +12,12 @@ import DialogModal from "./DialogModal";
 import { useDispatch, useSelector } from "react-redux";
 import { uiAction } from "../Store/Store";
 import Signin from "./Signin";
-import { savePost } from "../Hooks/PostActions";
+import { likePost, savePost } from "../Hooks/PostActions";
 import { BsSaveFill } from "react-icons/bs";
+import { PiHandsClappingBold } from "react-icons/pi";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../Firebasem/Store";
+import { readData } from "../Firebasem/FirestoreF";
 
 function Post({
   status,
@@ -28,7 +32,7 @@ function Post({
   onSetFollow,
   followLoading,
 }) {
-  const { title, content: note, likes: claps, comments } = postData;
+  const { title, content: note, comments } = postData;
 
   const [content, setContent] = useState(null);
 
@@ -93,9 +97,34 @@ function Post({
 
   const { stat, error, hasSaved, savedBlogs, saveBlog } = savePost();
 
+  const {
+    stat: likeLoading,
+    error: likeError,
+    hasLiked,
+    userLikeCount,
+    totalPostLikes: claps,
+    likeBlog,
+    undoClaps,
+  } = likePost();
+
   useEffect(() => {
     saveBlog({ postID: blogID, userID: currentUser });
   }, [currentUser]);
+
+  useEffect(() => {
+    setInterval(() => {
+      likeBlog({ postID: blogID, userID: currentUser });
+    }, 5000);
+  }, [currentUser]);
+
+  const toggleLike = () => {
+    if (!currentUser) {
+      dispatch(uiAction.setModalElement(Signin));
+      return;
+    }
+
+    likeBlog({ postID: blogID, userID: currentUser, toggle: true });
+  };
 
   return (
     <>
@@ -127,7 +156,7 @@ function Post({
                     <>
                       <p>-</p>
                       <button
-                        disabled={followLoading}
+                        disabled={currentUser && followLoading}
                         onClick={toggleFollow}
                         className="text-slate-700 hover:text-inherit hover:underline"
                       >
@@ -145,13 +174,35 @@ function Post({
             </div>
             <div className="flex justify-between gap-4 border-y py-3">
               <div className="flex gap-8">
-                <p className="flex items-center gap-1 text-[0.85rem]">
-                  {" "}
+                <p className="flex items-center gap-2 text-[0.85rem]">
+                  <div className="flex items-center">
+                    {!hasLiked && (
+                      <button
+                        onClick={toggleLike}
+                        className="text-slate-700 hover:text-inherit"
+                      >
+                        <PiHandsClappingThin className="text-2xl" />
+                      </button>
+                    )}
+                    {hasLiked && (
+                      <button
+                        onClick={toggleLike}
+                        className="text-slate-700 hover:text-inherit"
+                      >
+                        <PiHandsClappingBold className="text-2xl" />
+                      </button>
+                    )}
+                    {hasLiked && (
+                      <span
+                        title="Your Claps"
+                        className="text-[0.85rem] text-slate-700 "
+                      >
+                        ({userLikeCount})
+                      </span>
+                    )}
+                  </div>
                   <button className="text-slate-700 hover:text-inherit">
-                    <PiHandsClappingThin className="text-2xl" />
-                  </button>{" "}
-                  <button className="text-slate-700 hover:text-inherit">
-                    {claps}
+                    <span>{claps}</span>
                   </button>
                 </p>
                 <button className="flex items-center gap-1 text-slate-700 hover:text-inherit">
@@ -221,6 +272,9 @@ function Post({
                       openCont={setPostInfo}
                       onSetFollow={onSetFollow}
                       bloggerID={bloggerID}
+                      hasLiked={hasLiked}
+                      onUndoClaps={undoClaps}
+                      postID={blogID}
                     />
                   </DialogModal>
                 </div>
@@ -245,11 +299,15 @@ const ManagePost = ({
   isCurrentUser,
   bloggerID,
   onSetFollow,
+  hasLiked,
+  onUndoClaps,
+  postID,
 }) => {
   const currentUser = useSelector((state) => state.auth.currentUser);
 
-  const toggleFollow = () => {
-    onSetFollow({ user1ID: bloggerID, user2ID: currentUser, toggle: true });
+  const undoLikes = () => {
+    onUndoClaps({ postID: postID, userID: currentUser });
+    openCont(false);
   };
 
   return (
@@ -263,15 +321,16 @@ const ManagePost = ({
             </Link>{" "}
           </button>
         )}
-        <button
-          className="thover:text-slate-950 w-fit text-nowrap py-1"
-          onClick={() => {
-            openCont(false);
-          }}
-        >
-          Undo Claps
-        </button>
+        {hasLiked && (
+          <button
+            className="thover:text-slate-950 w-fit text-nowrap py-1"
+            onClick={undoLikes}
+          >
+            Undo Claps
+          </button>
+        )}
       </div>
     </>
   );
 };
+
