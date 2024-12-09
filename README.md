@@ -1,5 +1,6 @@
 # medium-react-clone
 A React based clone web application of [Medium](https://medium.com) with [Firebase](https://firebase.google.com) as a backend 
+Here is the [Online](https://medium-react-clone.vercel.app/) Deployed version 
 
 ## Technologies Used
 - React.js 
