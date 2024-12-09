@@ -18,6 +18,7 @@ import { PiHandsClappingBold } from "react-icons/pi";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../Firebasem/Store";
 import { readData } from "../Firebasem/FirestoreF";
+import Comment from "./Comment/Comment";
 
 function Post({
   status,
@@ -112,9 +113,13 @@ function Post({
   }, [currentUser]);
 
   useEffect(() => {
-    setInterval(() => {
+    likeBlog({ postID: blogID, userID: currentUser });
+    getCommentsLength();
+    const interval = setInterval(() => {
       likeBlog({ postID: blogID, userID: currentUser });
-    }, 5000);
+      getCommentsLength();
+    }, 60000);
+    return () => clearInterval(interval);
   }, [currentUser]);
 
   const toggleLike = () => {
@@ -126,8 +131,32 @@ function Post({
     likeBlog({ postID: blogID, userID: currentUser, toggle: true });
   };
 
+  const [commentLength, setCommentLength] = useState(null);
+
+  const getCommentsLength = async () => {
+    try {
+      const ref = collection(db, "posts", blogID, "comments");
+      const queryRef = query(ref, where("replyTo", "==", "ORIGINAL"));
+      const querySnapShot = await getDocs(queryRef);
+
+      setCommentLength(querySnapShot.size);
+    } catch (error) {
+      setCommentLength(querySnapShot.size);
+      error.message != "NO_DATA_FOUND" && toast.error("There was some error!");
+    } finally {
+    }
+  };
+
+  const [commentDisp, setCommentDisp] = useState(false);
+
   return (
     <>
+      <Comment
+        bloggerID={bloggerID}
+        isVisible={commentDisp}
+        postId={blogID}
+        onChangeDisp={setCommentDisp}
+      />
       <div className="flex flex-col gap-10 mt-6">
         <p className="capitalize font-semibold text-3xl sm:text-[40px] text-center mb-4">
           {" "}
@@ -142,7 +171,7 @@ function Post({
                   <img
                     src={bloggerImgurl}
                     alt=""
-                    className="w-full object-center object-cover rounded-[50%]"
+                    className="w-full h-full object-center object-cover rounded-[50%]"
                   />
                 </Link>{" "}
               </div>
@@ -205,8 +234,13 @@ function Post({
                     <span>{claps}</span>
                   </button>
                 </p>
-                <button className="flex items-center gap-1 text-slate-700 hover:text-inherit">
-                  <FaRegComment className="text-2xl" /> {comments}
+                <button
+                  className="flex items-center gap-1 text-slate-700 hover:text-inherit"
+                  onClick={() => {
+                    setCommentDisp(true);
+                  }}
+                >
+                  <FaRegComment className="text-2xl" /> {commentLength}
                 </button>
               </div>
               <div className="flex gap-8 ">
@@ -333,4 +367,3 @@ const ManagePost = ({
     </>
   );
 };
-

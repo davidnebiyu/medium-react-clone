@@ -63,8 +63,8 @@ function UserDiscModal({mousePos, bloggerID, className, ...props}) {
     
         <div className={`absolute ${distanceFromBottom > 300 ? 'top-6' : 'bottom-6'} ${distanceFromRight < 300 ? 'right-0' : 'left-0'}  bg-white  flex flex-col gap-3 w-[270px] border shadow-2xl rounded-sm p-4 z-10 ${className}`}>
             <div className="flex justify-between gap-4 items-center">
-                <div className="w-[70px]">
-                  <img src={userData && userData.userImage ? userData.userImage : profilepic} className='w-full rounded-[50%] object-cover object-center' alt="" />
+                <div className="w-[70px] h-[70px]">
+                  <img src={userData && userData.userImage ? userData.userImage : profilepic} className='w-full h-full rounded-[50%] object-cover object-center' alt="" />
                   
                 </div>
                 {!isCurrentUser && <FollowBtn className="!h-fit" user1={currentUser} user2={bloggerID} onClicked={onFollowChange}/>}

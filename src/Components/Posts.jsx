@@ -11,10 +11,13 @@ import { useSelector } from "react-redux";
 import { likePost, savePost } from "../Hooks/PostActions";
 import { BsSaveFill } from "react-icons/bs";
 import { PiHandsClappingBold } from "react-icons/pi";
+import { toast } from "react-toastify";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../Firebasem/Store";
 
 
 function Posts({ post, postID, source }) {
-  const { title, desc, date, comments, userID } = post;
+  const { title, desc, date, userID } = post;
   const [isUserDiscVisible, setIsUserDiscVisible] = useState(false);
   const [mousePos, setMousePos] = useState(null);
 
@@ -57,12 +60,32 @@ function Posts({ post, postID, source }) {
     saveBlog({ postID: postID, userID: currentUser });
   }, [currentUser]);
 
-  useEffect(() => {
-    setInterval(()=>{
-      likeBlog({ postID: postID, userID: currentUser });
+  
+  const [commentLength, setCommentLength] = useState(null);
 
-    }, 5000)
+  const getCommentsLength = async () => {
+    try {
+      const ref = collection(db, "posts", postID, "comments");
+      const queryRef = query(ref, where("replyTo", "==", "ORIGINAL"));
+      const querySnapShot = await getDocs(queryRef);
+      
+      setCommentLength(querySnapShot.size);
+    } catch (error) {
+      console.log(error);
+      error.message != "NO_DATA_FOUND" && toast.error("There was some error!");
+    } 
+  };
+
+  useEffect(() => {
+    likeBlog({ postID: postID, userID: currentUser });
+    getCommentsLength()
+    const interval = setInterval(()=>{
+      likeBlog({ postID: postID, userID: currentUser });
+      getCommentsLength()
+    }, 60000)
+    return ()=>clearInterval(interval)
   }, [currentUser]);
+  
 
   return (
     <>
@@ -89,7 +112,7 @@ function Posts({ post, postID, source }) {
               }}
             >
               <div className="flex gap-4 items-center hover:underline">
-                <div className="w-[30px] ">
+                <div className="w-[30px] h-[30px]">
                   <img
                     src={
                       bloggerData &&
@@ -97,7 +120,7 @@ function Posts({ post, postID, source }) {
                         ? bloggerData.userImage
                         : profilepic)
                     }
-                    className="w-full border rounded-[50%] object-cover object-center"
+                    className="w-full h-full border rounded-[50%] object-cover object-center"
                     alt=""
                   />
                 </div>
@@ -126,7 +149,7 @@ function Posts({ post, postID, source }) {
                   {claps}
                 </p>
                 <p className="flex items-center gap-1">
-                  <FaRegComment className="text-xl text-slate-950" /> {comments}
+                  <FaRegComment className="text-xl text-slate-950" /> {commentLength}
                 </p>
               </div>
               {bloggerId != null && !isCurrentUser && hasSaved != null && source != "library" && (

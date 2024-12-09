@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef } from 'react'
+import React, { forwardRef, useEffect, useRef, useState } from 'react'
 
 export const FileInput = forwardRef(({className,children, multiple=false, onSetFile}, ref)=> {
     
@@ -25,6 +25,31 @@ export const FileInput = forwardRef(({className,children, multiple=false, onSetF
           />
         </div>
       
+    )
+  })
+
+
+  export const TextArea = forwardRef(({className, placeholder, onfocus, changeHandler, content}, ref)=> {
+    
+
+    const messageHandler = (e)=>{
+      changeHandler(e.target.value)
+      e.target.style.height = "auto"
+      e.target.style.height = `${e.target.scrollHeight}px`
+
+    }
+
+    return (
+          <textarea name="" ref={ref} id=""  value={content} onChange={messageHandler} placeholder={placeholder} onFocus={onfocus} style={{
+            height: 'auto',       // Initial height
+            // border: 'none',       // Remove default border
+            resize: 'none',       // Disable manual resizing
+            // overflow: 'auto',   // Hide overflow
+            width: '100%',        // Set width as needed
+            padding: '8px',       // Add padding for better aesthetics
+            outline: "none"
+          }}
+           className={`${className}`}></textarea>      
     )
   })
 

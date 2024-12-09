@@ -630,7 +630,7 @@ function ProfilePage() {
 
             <div className=" flex-1 flex flex-col gap-5 sm:gap-10 pl-3 md:pl-6 py-8 sm:py-10 text-slate-700">
               <div className="flex items-center sm:items-start gap-6 sm:flex-col sm:gap-2">
-                <div className="w-[70px]">
+                <div className="w-[70px] h-[70px]">
                   <img
                     src={
                       userData && userData.userImage
@@ -638,7 +638,7 @@ function ProfilePage() {
                         : profilepic
                     }
                     alt=""
-                    className="w-full object-cover object-center rounded-[50%]"
+                    className="w-full h-full object-cover object-center rounded-[50%]"
                   />
                 </div>
                 <div className="flex flex-col gap-2">

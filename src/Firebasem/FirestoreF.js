@@ -21,10 +21,20 @@ export const addData = ({ collectionName, data }) => {
   return addDoc(collection(db, collectionName), { ...data });
 };
 
+// add data with subcollection
+export const addDataSC = ({collectionName, subCollectionName, docId, data})=>{
+  return addDoc(collection(db, collectionName, docId, subCollectionName), {...data})
+}
+
 // update document without overwriting
 export const updateData = ({ collectionName, Id, data }) => {
   return updateDoc(doc(db, collectionName, Id), { ...data });
 };
+
+// update document without overwriting
+export const updateDataSC = ({ collectionName, subCollectionName, docId, subCollId, data }) => {
+  return updateDoc(doc(db, collectionName, docId, subCollectionName, subCollId), { ...data });
+}; 
 
 // incrementing a field data
 export const incrementData = ({ collectionName, Id, fieldNamee, value }) => {
@@ -38,9 +48,19 @@ export const deleteData = ({ collectionName, Id }) => {
   return deleteDoc(doc(db, collectionName, Id));
 };
 
+//delete data
+export const deleteScData = ({ collectionName, docId, subCollName, subCollId }) => {
+  return deleteDoc(doc(db, collectionName, docId, subCollName, subCollId));
+};
+
 // read single data
 export const readData = ({ collectionName, Id }) => {
   return getDoc(doc(db, collectionName, Id));
+};
+
+// read subcollection data
+export const readDataSC = ({ collectionName, subCollectionName, docId, subCollId }) => {
+  return getDoc(doc(db, collectionName, docId, subCollectionName, subCollId));
 };
 
 // read all data in collection
